@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>KosNest NTB</title>
+<meta name="theme-color" content="#1F6BFF">
+<link rel="manifest" href="data:application/json;charset=utf-8,%7B%22name%22%3A%22KosNest%20NTB%22%2C%22short_name%22%3A%22KosNest%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23071A3D%22%2C%22theme_color%22%3A%22%231F6BFF%22%7D">
+</head><body>
+<script type="module">
+// KONFIGURASI APLIKASI
+const IS_PREVIEW = false; // Ubah menjadi false SAAT DEPLOY agar mode preview & data dummy hilang dan terhubung 100% ke Supabase
+const SUPABASE_URL = "https://zqgavsagbwurdksdjadf.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_wDFjdr3yj5RUv_l9r7ReXg_tXzxvErF";
+const sb = IS_PREVIEW ? null : (await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm')).createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// PWA: Service Worker dibuat dari Blob
+try{const sw=new Blob(["self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('fetch',()=>{});"],{type:'text/javascript'});navigator.serviceWorker&&navigator.serviceWorker.register(URL.createObjectURL(sw)).catch(()=>{})}catch(e){}
+
+// MOUNT: seluruh UI dirender di Shadow DOM agar tidak tertimpa CSS tema Blogger & tidak ikut terhapus editor Blogger
+const CSS=`*{box-sizing:border-box;margin:0;padding:0}
+:host{all:initial;display:block;position:fixed;inset:0;z-index:999999;--p:#1F6BFF;--c:#00C2FF;--n:#071A3D;--h:#0F2557;--b:#E2E8F0;--m:#64748B}
+button{font-family:inherit}h1{font-size:24px;font-weight:800}h2{font-size:18px;font-weight:800}h3{font-size:16px}small{color:var(--m);font-size:12px}i{font-style:normal;color:var(--p)}
+#root{position:absolute;inset:0;overflow:auto;overscroll-behavior:contain;overflow-x:hidden;-webkit-text-size-adjust:100%;font-family:'Plus Jakarta Sans',Inter,system-ui,sans-serif;font-size:14px;line-height:1.4;color:var(--h);background:radial-gradient(600px 320px at 0 -5%,rgba(0,194,255,.2),transparent),radial-gradient(500px 300px at 100% 0,rgba(31,107,255,.16),transparent),#F3F7FC}
+.card{background:rgba(255,255,255,.72);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 8px 24px rgba(31,107,255,.12);padding:14px}
+.warn{background:#FEE2E2;color:#B91C1C;margin-bottom:12px}.warn a{font-weight:800;cursor:pointer;text-decoration:underline}
+.em{text-align:center;color:var(--m);padding:28px}.em svg{color:var(--p);margin-bottom:6px}
+.btn{border:0;background:var(--p);color:#fff;font-weight:700;font-size:14px;padding:12px 16px;border-radius:12px;cursor:pointer;box-shadow:0 0 20px rgba(0,194,255,.35);display:inline-flex;gap:8px;align-items:center;justify-content:center;transition:.15s}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:scale(.95)}.btn.w{width:100%}.btn.s{padding:7px 12px;font-size:12px;border-radius:99px;box-shadow:none}.btn.o{background:#fff;color:var(--p);border:1px solid var(--p)}.btn.d{background:#EF4444;box-shadow:none}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--b);border-radius:12px;font:inherit;background:#fff;margin:4px 0 10px;color:var(--h)}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--p);box-shadow:0 0 0 3px rgba(31,107,255,.18)}
+label{font-size:12px;font-weight:700;color:var(--m)}pre{font:inherit;white-space:pre-wrap;margin-top:6px;color:var(--m)}
+.row{display:flex;align-items:center;gap:10px}.rb{flex:1;min-width:0;cursor:pointer}.rb b,.rb small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd{font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:#DBEAFE;color:var(--p);text-transform:capitalize}.bd.g{background:#DCFCE7;color:#16A34A}.bd.a{background:#FEF3C7;color:#B45309}.bd.r{background:#FEE2E2;color:#DC2626}
+#lst{display:grid;gap:12px}.tt{display:flex;gap:8px;align-items:center;margin:8px 0 12px}.tt h2{flex:1}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.av{width:40px;height:40px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--p),var(--c));color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center}.av.big{width:72px;height:72px;font-size:28px;margin:0 auto 8px}
+.hero{background:linear-gradient(135deg,#1F6BFF,#00C2FF);color:#fff;border-radius:24px;padding:20px;box-shadow:0 0 30px rgba(0,194,255,.4)}.hero small{color:#E0F2FE}.hero p{margin-top:4px;font-size:13px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}.stt{cursor:pointer}.stt h2{margin:8px 0 2px}.ico{width:36px;height:36px;border-radius:12px;background:#E0EDFF;color:var(--p);display:flex;align-items:center;justify-content:center}
+.tg{display:flex;background:#E8EEF8;border-radius:12px;padding:4px;margin:14px 0}.tg button{flex:1;border:0;background:none;padding:8px;border-radius:9px;font-weight:700;color:var(--m);cursor:pointer}.tg .on{background:#fff;color:var(--p);box-shadow:0 2px 8px rgba(31,107,255,.15)}
+.kv{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b)}.kv:last-child{border:0}
+.lgn{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px}.lc{width:100%;max-width:400px;padding:22px}.lk{text-align:center;margin-top:14px;cursor:pointer;color:var(--m)}.ql{margin-top:16px;text-align:center}
+.pv,.pv2{background:var(--n);color:var(--c);font-weight:700;font-size:11px;padding:5px 12px;border-radius:99px;box-shadow:0 0 14px rgba(0,194,255,.5)}.pv{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:9}.pv2{text-align:center;margin-bottom:14px}
+#app{display:flex;min-height:100%}main{flex:1;padding:16px 16px 110px;width:100%;max-width:900px;margin:0 auto}.sb{display:none}
+.bn{position:fixed;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-around;align-items:center;background:rgba(255,255,255,.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:24px;padding:8px;box-shadow:0 8px 30px rgba(31,107,255,.22);z-index:3}
+.ni{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;color:var(--m);cursor:pointer;padding:4px 8px}.ni.on{color:var(--p)}
+.fab{width:54px;height:54px;border-radius:50%;border:0;background:var(--p);color:#fff;margin-top:-30px;box-shadow:0 0 22px rgba(0,194,255,.7);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.ov{position:fixed;inset:0;background:rgba(7,26,61,.5);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;z-index:5}
+.sh{background:#fff;width:100%;max-width:520px;max-height:90%;overflow:auto;border-radius:24px 24px 0 0;padding:20px;animation:up .25s}.sh h2{margin-bottom:12px}.fr{display:grid;gap:8px}
+.gm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.gm button{border:0;background:#F3F7FC;border-radius:16px;padding:12px 6px;font-weight:700;font-size:11px;color:var(--h);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}.gm span{width:40px;height:40px;border-radius:50%;background:#E0EDFF;color:var(--p);display:flex;align-items:center;justify-content:center}
+.ts{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--n);color:#fff;padding:12px 18px;border-radius:12px;z-index:99;box-shadow:0 0 18px rgba(0,194,255,.5);max-width:90%}.ts.er{background:#DC2626}
+.sk{height:64px;border-radius:16px;margin-bottom:12px;background:linear-gradient(90deg,#E8EEF8 25%,#F8FAFF 50%,#E8EEF8 75%);background-size:200% 100%;animation:sh 1.2s infinite}
+#ld{position:fixed;inset:0;z-index:1000000;background:radial-gradient(circle at 50% 40%,#0B2E73,#071A3D 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;transition:opacity .6s}#ld.out{opacity:0;pointer-events:none}
+#ld h1{font-size:30px;margin-top:14px;letter-spacing:-.5px}#ld h1 span{color:var(--c);text-shadow:0 0 14px var(--c)}#ld p{color:#93B4E8;margin:6px 0 22px}
+.lg{width:120px;height:120px;filter:drop-shadow(0 0 8px #00C2FF);animation:gl 2s infinite}
+.pth{fill:none;stroke:url(#g);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:400;stroke-dashoffset:400;animation:dr 1.6s ease forwards}
+.bar{width:180px;height:5px;border-radius:9px;background:rgba(255,255,255,.12);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#1F6BFF,#00C2FF);box-shadow:0 0 12px #00C2FF;animation:ldb 2.2s ease forwards}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes gl{50%{filter:drop-shadow(0 0 22px #00C2FF)}}@keyframes ldb{to{width:100%}}@keyframes up{from{transform:translateY(40px);opacity:0}}@keyframes sh{to{background-position:-200% 0}}
+main{min-width:0}
+.hd{position:sticky;top:0;z-index:4;display:flex;justify-content:space-between;align-items:center;margin:-16px -16px 14px;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 12px;background:rgba(243,247,252,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid rgba(226,232,240,.8)}
+#root.prev .hd{padding-top:calc(34px + env(safe-area-inset-top,0px))}
+.ht b{display:block;font-size:18px;font-weight:800}
+.tt{display:none}.sbar{display:flex;gap:10px;margin-bottom:14px}.sbar input{margin:0;flex:1;min-width:0}.btn.sq{width:48px;height:48px;padding:0;border-radius:14px;flex:none}.tops{display:grid;gap:8px;margin-bottom:14px}
+.li{display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px}.li:active{transform:scale(.99)}.chev{color:#94A3B8;display:flex}
+.rb small{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dt{color:var(--m);margin:10px 0 14px;overflow-wrap:anywhere}.al{display:grid;gap:8px}
+.ai{border:1px solid var(--b);background:#fff;border-radius:14px;padding:14px 16px;font-size:15px;font-weight:700;color:var(--h);text-align:left;cursor:pointer}.ai:active{background:#F3F7FC}.ai.rd{color:#DC2626;border-color:#FECACA}
+.sec{margin:20px 2px 10px;font-size:15px}.lst2{padding:4px 14px}.mini{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--b);cursor:pointer}.mini:last-child{border:0}.mt{color:var(--m);padding:12px 0}
+.kv b{text-align:right;overflow-wrap:anywhere;margin-left:14px}pre{overflow-wrap:anywhere}
+.ni{flex:1;min-width:0;padding:4px 1px}.bn{padding:8px 6px}.ni span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fab{flex:none;margin-left:6px;margin-right:6px}
+.bn{bottom:calc(12px + env(safe-area-inset-bottom,0px))}input,select,textarea{font-size:16px}
+.sh{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}.sh::before{content:"";display:block;width:40px;height:4px;border-radius:9px;background:#CBD5E1;margin:-8px auto 14px}
+@media(min-width:900px){.tt{display:flex}.sh::before{display:none}.sbar{max-width:560px}.lst2{max-width:640px}
+.sb{display:flex;flex-direction:column;gap:4px;position:fixed;left:0;top:0;bottom:0;width:240px;padding:20px 14px;background:rgba(255,255,255,.75);backdrop-filter:blur(18px);border-right:1px solid var(--b);overflow:hidden}
+.sbm{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px}.brand{display:flex;align-items:center;gap:8px;font-size:18px;margin-bottom:16px;padding:0 8px}
+.si{display:flex;gap:10px;align-items:center;width:100%;padding:12px 14px;border:0;background:none;border-radius:12px;font-weight:700;color:var(--m);cursor:pointer;text-align:left}.si.on{background:var(--p);color:#fff;box-shadow:0 0 18px rgba(0,194,255,.4)}
+main{padding:24px 32px 32px;max-width:none;margin:0 0 0 240px}.bn{display:none}#lst{grid-template-columns:1fr 1fr}.g2{grid-template-columns:repeat(4,1fr)}.ov{align-items:center}.sh{border-radius:24px}.hd{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important}}`;
+const BOOT=`<div id="ld"><svg class="lg" viewBox="0 0 100 100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00C2FF"/><stop offset="1" stop-color="#1F6BFF"/></linearGradient></defs><path class="pth" d="M14 46 50 16l36 30v38a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4z"/><circle class="pth" cx="50" cy="58" r="7"/><path class="pth" d="M50 65v12"/></svg><h1>KosNest <span>NTB</span></h1><p>Menyiapkan kos Anda\u2026</p><div class="bar"><i></i></div></div><div id="root"><div id="scr"></div><div id="mo"></div></div>`;
+(function(){
+ const H=document.head,mk=(t,a)=>{const e=document.createElement(t);for(const k in a)e.setAttribute(k,a[k]);H.appendChild(e)};
+ if(!document.getElementById('kn-font')){mk('link',{rel:'preconnect',href:'https://fonts.googleapis.com'});mk('link',{id:'kn-font',rel:'stylesheet',href:'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap'})}
+ if(!document.getElementById('kn-manifest')){mk('link',{id:'kn-manifest',rel:'manifest',href:'data:application/json;charset=utf-8,%7B%22name%22%3A%22KosNest%20NTB%22%2C%22short_name%22%3A%22KosNest%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23071A3D%22%2C%22theme_color%22%3A%22%231F6BFF%22%7D'});mk('meta',{name:'theme-color',content:'#1F6BFF'})}
+ const old=document.getElementById('kosnest-host');if(old)old.remove();
+ document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';
+})();
+const HOST=document.createElement('kosnest-app');HOST.id='kosnest-host';HOST.style.cssText='all:initial!important;display:block!important;position:fixed!important;inset:0!important;z-index:999999!important;margin:0!important;padding:0!important;border:0!important;transform:none!important;filter:none!important';document.body.appendChild(HOST);
+const R=HOST.attachShadow({mode:'open'});
+R.innerHTML=BOOT;
+const STY=document.createElement('style');STY.textContent=CSS;R.prepend(STY);
+const $=s=>R.querySelector(s);
+const E=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>new Date().toISOString().slice(0,10);
+function addD(d,n){return new Date(new Date(d).getTime()+n*864e5).toISOString().slice(0,10)}
+const rp=n=>'Rp '+Number(n||0).toLocaleString('id-ID');
+const fd=d=>d?new Date(d).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',timeZone:'Asia/Makassar'}):'-';
+const tm=d=>d?new Date(d).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Makassar'})+' WITA':'-';
+const sum=(a,k)=>a.reduce((s,x)=>s+Number(x[k]||0),0);
+const idx=a=>Object.fromEntries(a.map(x=>[x.id,x]));
+const wa=(n,t)=>window.open('https://wa.me/'+String(n||'').replace(/\D/g,'').replace(/^0/,'62')+'?text='+encodeURIComponent(t),'_blank');
+
+// DATA DUMMY (hanya ada saat IS_PREVIEW = true)
+const T0=new Date().toISOString(),D0=T0.slice(0,10),P0=D0.slice(0,7);
+const SEED=IS_PREVIEW?{
+plans:[{id:'p1',nama:'Starter',harga_bulanan:49000,harga_tahunan:490000,maks_kos:1,maks_kamar:15,maks_penjaga:1},{id:'p2',nama:'Pro',harga_bulanan:99000,harga_tahunan:990000,maks_kos:3,maks_kamar:60,maks_penjaga:5}],
+owners:[{id:'su',nama:'Admin KosNest',email:'admin@kosnest.id',role:'superadmin'},{id:'o1',nama:'Budi Santoso',nama_usaha:'Kos Mandalika',email:'budi@kos.id',no_wa:'081234567890',role:'owner'}],
+subscriptions:[{id:'sb1',owner_id:'o1',plan_id:'p1',siklus:'bulanan',status:'trial',mulai:D0,berakhir:addD(D0,14)}],
+sub_payments:[{id:'sp1',owner_id:'o1',subscription_id:'sb1',plan_id:'p2',paket:'Pro',siklus:'bulanan',nominal:99000,metode:'DANA',status:'menunggu',created_at:T0}],
+settings:[{id:'st1',rekening:'BRI 1234-01-000000-50-1 a.n. KosNest\nDANA 0812-3456-7890',no_wa:'081234567890'}],
+properties:[{id:'pr1',owner_id:'o1',nama_kos:'Kos Mandalika Putri',alamat:'Jl. Pejanggik, Mataram',kabupaten_kota:'Kota Mataram',tipe:'Putri',no_wa:'081234567890',tgl_jatuh_tempo:5,rekening:'BCA 123456 a.n. Budi'}],
+rooms:[{id:'r1',owner_id:'o1',property_id:'pr1',no_kamar:'A1',lantai:1,harga_bulanan:900000,fasilitas:'AC, KM dalam',status:'terisi'},{id:'r2',owner_id:'o1',property_id:'pr1',no_kamar:'A2',lantai:1,harga_bulanan:800000,fasilitas:'Kipas',status:'kosong'}],
+staff:[{id:'sf1',owner_id:'o1',property_id:'pr1',nama:'Lalu Jaya',username:'penjaga',password:'123456',no_wa:'081111111111',status:'aktif'}],
+residents:[{id:'rs1',owner_id:'o1',property_id:'pr1',room_id:'r1',nama:'Siti Aisyah',username:'siti',password:'123456',no_wa:'082222222222',tgl_masuk:D0,deposit:300000,status:'aktif'}],
+invoices:[{id:'iv1',owner_id:'o1',property_id:'pr1',resident_id:'rs1',periode:P0,nominal:900000,jatuh_tempo:P0+'-05',status:'menunggu'}],
+rent_payments:[{id:'rp1',owner_id:'o1',property_id:'pr1',invoice_id:'iv1',resident_id:'rs1',nominal:900000,metode:'Transfer Bank',status:'menunggu',created_at:T0}],
+expenses:[{id:'ex1',owner_id:'o1',property_id:'pr1',kategori:'Listrik',nominal:350000,tanggal:D0,catatan:'Token listrik'}],
+announcements:[{id:'an1',owner_id:'o1',property_id:'pr1',judul:'Air mati hari Minggu',isi:'Air mati pukul 09.00-12.00 WITA.',created_at:T0}],
+complaints:[{id:'cp1',owner_id:'o1',property_id:'pr1',resident_id:'rs1',judul:'Lampu kamar mati',deskripsi:'Lampu kamar A1 mati.',status:'baru',created_at:T0}],
+visitors:[{id:'vs1',owner_id:'o1',property_id:'pr1',resident_id:'rs1',nama_tamu:'Rina',keperluan:'Antar paket',masuk:T0}],
+activity_logs:[{id:'lg1',owner_id:'o1',property_id:'pr1',aktor:'Budi Santoso',peran:'owner',aksi:'Menambah kamar A1',created_at:T0}]
+}:{};
+
+// LAPISAN DATA (Preview = memori lokal, Produksi = Supabase)
+const DB={
+async list(t,w={}){
+ if(IS_PREVIEW)return (SEED[t]||[]).filter(r=>Object.keys(w).every(k=>r[k]==w[k])).map(r=>({...r}));
+ let q=sb.from(t).select('*');for(const k in w)q=q.eq(k,w[k]);
+ const{data,error}=await q.order('created_at',{ascending:false});if(error)throw error;return data},
+async add(t,o){
+ if(IS_PREVIEW){o={id:'x'+Math.random().toString(36).slice(2,8),created_at:new Date().toISOString(),...o};(SEED[t]=SEED[t]||[]).unshift(o);return o}
+ const{data,error}=await sb.from(t).insert(o).select().single();if(error)throw error;return data},
+async upd(t,id,o){
+ if(IS_PREVIEW){Object.assign(SEED[t].find(r=>r.id==id),o);return}
+ const{error}=await sb.from(t).update(o).eq('id',id);if(error)throw error},
+async del(t,id){
+ if(IS_PREVIEW){SEED[t]=SEED[t].filter(r=>r.id!=id);return}
+ const{error}=await sb.from(t).delete().eq('id',id);if(error)throw error}
+};
+async function up(file){
+ if(!file)return null;
+ if(IS_PREVIEW)return new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(file)});
+ const p=`${S.role}/${Date.now()}_${file.name.replace(/[^\w.]/g,'_')}`;
+ const{error}=await sb.storage.from('bukti').upload(p,file);if(error)throw error;
+ return sb.storage.from('bukti').getPublicUrl(p).data.publicUrl}
+
+const S={tab:'owner',q:'',reg:0},LK={};
+const LOCKMSG='Langganan berakhir. Perpanjang di menu Langganan.';
+const NOP=['properties','staff','plans','owners','settings','subscriptions','sub_payments'];
+const ROLE={superadmin:'Super Admin',owner:'Pemilik Kos',staff:'Penjaga Kos',resident:'Penghuni'};
+const NTB=['Kota Mataram','Lombok Barat','Lombok Tengah','Lombok Timur','Lombok Utara','Sumbawa','Sumbawa Barat','Dompu','Bima','Kota Bima'];
+const BC={aktif:'g',terisi:'g',lunas:'g',diterima:'g',selesai:'g',keluar:'g',trial:'b',menunggu:'a',proses:'a',belum:'a','di dalam':'a',baru:'b',kosong:'b',terlambat:'r',ditolak:'r',perbaikan:'r',nonaktif:'r',ditangguhkan:'r',kedaluwarsa:'r'};
+const IC={home:'M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',bed:'M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9',users:'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',receipt:'M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1zM8 8h8M8 12h8',user:'M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8',plus:'M12 5v14M5 12h14',bell:'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',chart:'M3 3v18h18M18 17V9M13 17V5M8 17v-3',card:'M2 5h20v14H2zM2 10h20',alert:'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z',logout:'M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9',shield:'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10',book:'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5',building:'M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18zM6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2M10 6h4M10 10h4M10 14h4M10 18h4',wallet:'M20 12V8H6a2 2 0 0 1 0-4h12v4M4 6v12a2 2 0 0 0 2 2h14v-4M18 12a2 2 0 0 0 0 4h4v-4z',list:'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',chev:'M9 18l6-6-6-6'};
+const ic=(n,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]||''}"/></svg>`;
+const LOGO=s=>`<svg width="${s}" height="${s}" viewBox="0 0 100 100" fill="none" stroke="#1F6BFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 46 50 16l36 30v38a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4z"/><circle cx="50" cy="58" r="7"/><path d="M50 65v12"/></svg>`;
+
+const MENU={
+superadmin:[['dash','Dashboard','home','Beranda'],['owners','Pemilik Kos','users','Pemilik'],['subs','Langganan Pemilik','card','Langganan'],['subpay','Verifikasi Langganan','receipt','Verifikasi'],['plans','Paket & Harga','wallet'],['settings','Rekening','wallet'],['profile','Profil','user']],
+owner:[['dash','Beranda','home'],['properties','Kos','building'],['rooms','Kamar','bed'],['residents','Penghuni','users'],['invoices','Tagihan','receipt'],['rentpay','Verifikasi Bayar','wallet'],['staff','Penjaga','shield'],['expenses','Pengeluaran','chart'],['complaints','Keluhan','alert'],['announcements','Pengumuman','bell'],['logs','Log Aktivitas','list'],['sub','Langganan','card'],['profile','Profil','user']],
+staff:[['dash','Beranda','home'],['rooms','Kamar','bed'],['residents','Penghuni','users'],['rentpay','Verifikasi Bayar','receipt','Verifikasi'],['invoices','Tagihan','receipt'],['visitors','Buku Tamu','book'],['complaints','Keluhan','alert'],['profile','Profil','user']],
+resident:[['dash','Beranda','home'],['myinv','Tagihan','receipt'],['mycomp','Keluhan','alert'],['ann','Pengumuman','bell'],['profile','Profil','user']]};
+const NAV={superadmin:['dash','owners','subs','subpay'],owner:['dash','rooms','invoices','profile'],staff:['dash','residents','rentpay','profile'],resident:['dash','myinv','ann','profile']};
+
+// Filter data per peran (isolasi data per pemilik)
+const wF=(t,c)=>{
+ if(c&&c.w)return c.w();if(c&&c.all)return{};
+ if(S.role==='superadmin')return{};if(S.role==='owner')return{owner_id:S.u.id};
+ const w={owner_id:S.u.owner_id};if(S.role==='staff'&&!NOP.includes(t))w.property_id=S.u.property_id;return w};
+const oid=()=>S.role==='owner'?S.u.id:S.u.owner_id;
+const log=a=>{if(S.role==='superadmin')return;DB.add('activity_logs',{owner_id:oid(),property_id:S.u.property_id||null,aktor:S.u.nama,peran:S.role,aksi:a}).catch(()=>{})};
+const PROP={t:'properties',l:r=>r.nama_kos},RES={t:'residents',l:r=>r.nama},ROOM={t:'rooms',l:r=>r.no_kamar+' ('+r.status+')'};
+const ib=r=>r.status==='belum'&&r.jatuh_tempo<today()?'terlambat':r.status;
+const nm=(t,id,k)=>(LK[t]&&LK[t][id]&&LK[t][id][k])||'-';
+const pend=r=>r.status==='menunggu';
+const showBukti=r=>modal(`<h2>Bukti Bayar</h2>${r.bukti_url?`<img src="${E(r.bukti_url)}" style="width:100%;border-radius:12px" alt="Bukti">`:'<p>Tidak ada bukti.</p>'}`);
+const vrf=async(r,ok)=>{await DB.upd('rent_payments',r.id,{status:ok?'diterima':'ditolak'});await DB.upd('invoices',r.invoice_id,{status:ok?'lunas':'belum'});log('Pembayaran '+(ok?'diterima':'ditolak'))};
+const vsub=async(r,ok)=>{await DB.upd('sub_payments',r.id,{status:ok?'diterima':'ditolak'});if(ok){const[s]=await DB.list('subscriptions',{owner_id:r.owner_id});const b=s.berakhir>today()?s.berakhir:today();await DB.upd('subscriptions',s.id,{plan_id:r.plan_id,siklus:r.siklus,status:'aktif',mulai:today(),berakhir:addD(b,r.siklus==='tahunan'?365:30)})}};
+const payModal=async r=>{const[p]=await DB.list('properties',{id:r.property_id});modal(`<h2>Bayar ${E(r.periode)}</h2><div class="card">Total <b>${rp(r.nominal)}</b><pre>${E(p&&p.rekening||'Info rekening belum diisi pemilik. Hubungi pemilik/penjaga kos.')}</pre></div><form onsubmit="A.pay(event,'${r.id}')"><label>Metode pembayaran</label><select name="m" onchange="this.form.querySelector('.bf').style.display=this.value.startsWith('Tunai')?'none':'block'"><optgroup label="Bank"><option>Transfer Bank</option></optgroup><optgroup label="E-Wallet"><option>DANA</option><option>OVO</option><option>GoPay</option><option>ShopeePay</option><option>QRIS</option></optgroup><optgroup label="Tunai"><option>Tunai (via penjaga)</option></optgroup></select><div class="bf"><label>Bukti bayar (foto)</label><input type="file" name="f" accept="image/*"></div><button class="btn w">Kirim Bukti</button></form>`)};
+const lunas=async r=>{const ps=(await DB.list('rent_payments',{invoice_id:r.id})).filter(pend);
+ if(ps.length){for(const x of ps)await DB.upd('rent_payments',x.id,{status:'diterima'})}
+ else await DB.add('rent_payments',{owner_id:oid(),property_id:r.property_id,invoice_id:r.id,resident_id:r.resident_id,nominal:r.nominal,metode:'Tunai (dicatat '+(S.role==='owner'?'pemilik':'penjaga')+')',status:'diterima'});
+ await DB.upd('invoices',r.id,{status:'lunas'});log('Menandai tagihan lunas')};
+
+const resetPw=async r=>{const pw=prompt('Password baru untuk '+(r.email||r.nama)+' (min. 6 karakter):');if(!pw)return;if(pw.length<6)throw Error('Password minimal 6 karakter');
+ if(!IS_PREVIEW){const{error}=await sb.rpc('admin_set_password',{p_id:r.id,p_password:pw});if(error)throw error}toast('Password pemilik berhasil direset')};
+const ext=async(r,n)=>{const b=r.berakhir&&r.berakhir>today()?r.berakhir:today();await DB.upd('subscriptions',r.id,{berakhir:addD(b,n),status:'aktif'})};
+const onm=id=>{const o=LK.owners&&LK.owners[id];return o?(o.nama_usaha||o.nama):'-'};
+// KONFIGURASI MENU CRUD
+const C={
+plans:{t:'plans',title:'Paket & Harga',all:1,ti:r=>r.nama,sub:r=>rp(r.harga_bulanan)+'/bln \u2022 '+rp(r.harga_tahunan)+'/thn \u2022 '+r.maks_kamar+' kamar',f:[['nama','Nama paket','text'],['harga_bulanan','Harga bulanan','number'],['harga_tahunan','Harga tahunan','number'],['maks_kos','Maks. kos','number'],['maks_kamar','Maks. kamar','number'],['maks_penjaga','Maks. penjaga','number']]},
+owners:{t:'owners',title:'Pemilik Kos',all:1,noadd:1,nodel:r=>r.role==='superadmin',bd:r=>r.role==='superadmin'?'superadmin':(r.status||'aktif'),ti:r=>r.nama_usaha||r.nama,sub:r=>[r.nama,r.email,r.no_wa].filter(Boolean).join(' \u2022 '),
+ f:[['nama','Nama','text'],['nama_usaha','Nama usaha (opsional)','text'],['no_wa','No. WhatsApp (opsional)','text'],['status','Status akun','select',['aktif','ditangguhkan']]],
+ act:[['Tangguhkan',r=>DB.upd('owners',r.id,{status:'ditangguhkan'}),r=>r.role==='owner'&&r.status!=='ditangguhkan'],['Aktifkan',r=>DB.upd('owners',r.id,{status:'aktif'}),r=>r.role==='owner'&&r.status==='ditangguhkan'],['Reset Password',resetPw,r=>r.role==='owner']]},
+subs:{t:'subscriptions',title:'Langganan Pemilik',all:1,lk:['owners','plans'],bd:r=>(r.status==='aktif'||r.status==='trial')&&r.berakhir<today()?'kedaluwarsa':r.status,ti:r=>onm(r.owner_id),sub:r=>nm('plans',r.plan_id,'nama')+' \u2022 '+r.siklus+' \u2022 sampai '+fd(r.berakhir),
+ act:[['+30 hari',r=>ext(r,30)],['+1 tahun',r=>ext(r,365)],['Nonaktifkan',r=>DB.upd('subscriptions',r.id,{status:'kedaluwarsa'}),r=>r.status!=='kedaluwarsa']],
+ f:[['owner_id','Pemilik','select',{t:'owners',l:r=>(r.nama_usaha||r.nama)+' ('+(r.email||'')+')'}],['plan_id','Paket','select',{t:'plans',l:r=>r.nama}],['siklus','Siklus','select',['bulanan','tahunan']],['status','Status','select',['trial','aktif','menunggu','kedaluwarsa']],['mulai','Mulai','date'],['berakhir','Berakhir','date']]},
+settings:{t:'settings',title:'Rekening Penerimaan',all:1,ti:r=>String(r.rekening||'').split('\n')[0],sub:r=>'WA admin: '+(r.no_wa||'-'),f:[['rekening','Rekening / e-wallet (satu per baris)','textarea'],['no_wa','WhatsApp admin','text']]},
+subpay:{t:'sub_payments',title:'Verifikasi Langganan',all:1,noadd:1,lk:['owners'],bd:r=>r.status,ti:r=>nm('owners',r.owner_id,'nama_usaha')+' \u2022 '+rp(r.nominal),sub:r=>r.paket+' '+r.siklus+' \u2022 '+r.metode+' \u2022 '+fd(r.created_at),f:[],act:[['Terima',r=>vsub(r,1),pend],['Tolak',r=>vsub(r,0),pend],['Bukti',showBukti]]},
+properties:{t:'properties',title:'Kos',own:1,lim:'maks_kos',ti:r=>r.nama_kos,sub:r=>r.kabupaten_kota+' \u2022 '+r.tipe,f:[['nama_kos','Nama kos','text'],['alamat','Alamat','textarea'],['kabupaten_kota','Kabupaten/Kota','select',NTB],['tipe','Tipe','select',['Putra','Putri','Campur']],['no_wa','No. WhatsApp (opsional)','text'],['tgl_jatuh_tempo','Tanggal jatuh tempo tiap bulan','number'],['rekening','Rekening bayar penghuni (opsional)','textarea']]},
+rooms:{t:'rooms',title:'Kamar',own:1,lim:'maks_kamar',bd:r=>r.status,ti:r=>'Kamar '+r.no_kamar,sub:r=>rp(r.harga_bulanan)+'/bln \u2022 '+(r.fasilitas||'-'),f:[['property_id','Kos','select',PROP],['no_kamar','No. kamar','text'],['lantai','Lantai (opsional)','number'],['harga_bulanan','Harga per bulan','number'],['fasilitas','Fasilitas (opsional)','text'],['status','Status','select',['kosong','terisi','perbaikan']]]},
+residents:{t:'residents',title:'Penghuni',own:1,lk:['rooms'],bd:r=>r.status,ti:r=>r.nama,sub:r=>'Kamar '+nm('rooms',r.room_id,'no_kamar')+' \u2022 '+(r.no_wa||'-'),
+ f:[['nama','Nama lengkap','text'],['nik','NIK (opsional)','text'],['no_wa','No. WhatsApp','text'],['room_id','Kamar','select',ROOM],['username','Username login','text'],['password','Password login','password'],['tgl_masuk','Tanggal masuk','date'],['deposit','Deposit (opsional)','number'],['kontak_darurat','Kontak darurat (opsional)','text'],['status','Status','select',['aktif','keluar']]],
+ pre:o=>{const m=LK.rooms[o.room_id];if(m)o.property_id=m.property_id},
+ after:async o=>{if(o.room_id)await DB.upd('rooms',o.room_id,{status:o.status==='keluar'?'kosong':'terisi'})}},
+staff:{t:'staff',title:'Penjaga Kos',own:1,lim:'maks_penjaga',bd:r=>r.status,ti:r=>r.nama,sub:r=>'@'+r.username+' \u2022 '+(r.no_wa||'-'),f:[['property_id','Kos','select',PROP],['nama','Nama','text'],['username','Username login','text'],['password','Password login','password'],['no_wa','No. WhatsApp','text'],['status','Status','select',['aktif','nonaktif']]]},
+invoices:{t:'invoices',title:'Tagihan',own:1,lk:['residents'],bd:ib,ti:r=>nm('residents',r.resident_id,'nama')+' \u2022 '+r.periode,sub:r=>rp(r.nominal)+' \u2022 jatuh tempo '+fd(r.jatuh_tempo),top:[['Buat Tagihan Bulan Ini','genInv']],
+ act:[['Lunas',lunas,r=>r.status!=='lunas'],['WA',r=>{const p=LK.residents[r.resident_id]||{};wa(p.no_wa,`Halo ${p.nama||''}, pengingat tagihan kos periode ${r.periode} sebesar ${rp(r.nominal)}, jatuh tempo ${fd(r.jatuh_tempo)}. Terima kasih.`)},r=>r.status!=='lunas']],
+ f:[['resident_id','Penghuni','select',RES],['periode','Periode (YYYY-MM)','text'],['nominal','Nominal','number'],['jatuh_tempo','Jatuh tempo','date'],['status','Status','select',['belum','menunggu','lunas','terlambat']]],
+ pre:o=>{const m=LK.residents[o.resident_id];if(m)o.property_id=m.property_id}},
+rentpay:{t:'rent_payments',title:'Verifikasi Pembayaran',own:1,noadd:1,lk:['residents'],bd:r=>r.status,ti:r=>nm('residents',r.resident_id,'nama')+' \u2022 '+rp(r.nominal),sub:r=>r.metode+' \u2022 '+fd(r.created_at),f:[],act:[['Terima',r=>vrf(r,1),pend],['Tolak',r=>vrf(r,0),pend],['Bukti',showBukti]]},
+expenses:{t:'expenses',title:'Pengeluaran',own:1,ti:r=>r.kategori+' \u2022 '+rp(r.nominal),sub:r=>fd(r.tanggal)+' \u2022 '+(r.catatan||'-'),f:[['property_id','Kos','select',PROP],['kategori','Kategori','select',['Listrik','Air','Kebersihan','Perbaikan','Gaji','Lainnya']],['nominal','Nominal','number'],['tanggal','Tanggal','date'],['catatan','Catatan (opsional)','text']]},
+announcements:{t:'announcements',title:'Pengumuman',own:1,ti:r=>r.judul,sub:r=>r.isi,f:[['property_id','Kos (opsional)','select',PROP],['judul','Judul','text'],['isi','Isi pengumuman','textarea']]},
+complaints:{t:'complaints',title:'Keluhan',own:1,noadd:1,lk:['residents'],bd:r=>r.status,ti:r=>r.judul,sub:r=>nm('residents',r.resident_id,'nama')+' \u2022 '+(r.deskripsi||''),f:[['status','Status','select',['baru','proses','selesai']]]},
+visitors:{t:'visitors',title:'Buku Tamu',own:1,lk:['residents'],bd:r=>r.keluar?'keluar':'di dalam',ti:r=>r.nama_tamu,sub:r=>'Menemui '+nm('residents',r.resident_id,'nama')+' \u2022 '+r.keperluan+' \u2022 '+tm(r.masuk),
+ act:[['Catat Keluar',r=>DB.upd('visitors',r.id,{keluar:new Date().toISOString()}),r=>!r.keluar]],f:[['resident_id','Menemui penghuni','select',RES],['nama_tamu','Nama tamu','text'],['keperluan','Keperluan','text']],
+ pre:o=>{const m=LK.residents[o.resident_id];if(m)o.property_id=m.property_id;if(!S.ed)o.masuk=new Date().toISOString()}},
+logs:{t:'activity_logs',title:'Log Aktivitas',own:1,ro:1,ti:r=>r.aksi,sub:r=>r.aktor+' ('+r.peran+') \u2022 '+fd(r.created_at)+' '+tm(r.created_at),f:[]},
+myinv:{t:'invoices',title:'Tagihan Saya',ro:1,w:()=>({resident_id:S.u.id}),bd:ib,ti:r=>'Tagihan '+r.periode,sub:r=>rp(r.nominal)+' \u2022 jatuh tempo '+fd(r.jatuh_tempo),f:[],act:[['Bayar',r=>payModal(r),r=>r.status==='belum'||r.status==='terlambat']]},
+mycomp:{t:'complaints',title:'Keluhan Saya',own:1,w:()=>({resident_id:S.u.id}),bd:r=>r.status,ti:r=>r.judul,sub:r=>r.deskripsi||'',f:[['judul','Judul keluhan','text'],['deskripsi','Ceritakan masalahnya','textarea']],pre:o=>{o.resident_id=S.u.id;o.property_id=S.u.property_id}}};
+C.ann={...C.announcements,ro:1,own:0,f:[],w:()=>({owner_id:S.u.owner_id})};
+
+// MODAL & TOAST
+const toast=(m,e)=>{const t=document.createElement('div');t.className='ts'+(e?' er':'');t.textContent=m==='Invalid login credentials'?'Email atau password salah.':m;$('#root').append(t);setTimeout(()=>t.remove(),3200)};
+const modal=h=>{$('#mo').innerHTML=`<div class="ov" onclick="if(event.target===this)A.cl()"><div class="sh">${h}</div></div>`};
+
+// TAMPILAN
+function login(){
+ const t=S.tab,pv=IS_PREVIEW;
+ const reg=`<form onsubmit="A.reg(event)"><label>Nama lengkap</label><input name="n" required><label>Nama kos / usaha</label><input name="k" required><label>No. WhatsApp</label><input name="w" required><label>Email</label><input name="e" type="email" required><label>Password (min. 6 karakter)</label><input name="p" type="password" minlength="6" required><button class="btn w">Daftar & Mulai Trial 14 Hari</button></form><p class="lk" onclick="A.rg(0)">Sudah punya akun? <b>Masuk</b></p>`;
+ $('#scr').innerHTML=`<div class="lgn"><div class="lc card">${pv?'<div class="pv2">Mode Preview Aktif</div>':''}<div style="text-align:center">${LOGO(56)}<h1>KosNest <i>NTB</i></h1><small>Kelola kos lebih cerdas di Nusa Tenggara Barat</small></div>
+ <div class="tg">${[['owner','Pemilik'],['staff','Penjaga'],['resident','Penghuni']].map(x=>`<button class="${t===x[0]?'on':''}" onclick="A.tab('${x[0]}')">${x[1]}</button>`).join('')}</div>
+ ${S.reg&&t==='owner'?reg:`<form onsubmit="A.login(event)"><label>${t==='owner'?'Email':'Username'}</label><input name="u" ${t==='owner'?'type="email"':''} required><label>Password</label><input name="p" type="password" required><button class="btn w">Masuk</button></form>${t==='owner'?'<p class="lk" onclick="A.rg(1)">Belum punya akun? <b>Daftar pemilik kos</b></p>':''}`}
+ ${pv?`<div class="ql"><small>Quick Login (Preview)</small><div class="g2">${[['superadmin','Super Admin'],['owner','Pemilik'],['staff','Penjaga'],['resident','Penghuni']].map(x=>`<button class="btn s o" onclick="A.ql('${x[0]}')">${x[1]}</button>`).join('')}</div></div>`:''}</div></div>`}
+
+function shell(){
+ const m=MENU[S.role],nav=NAV[S.role].map(id=>m.find(x=>x[0]===id)),cur=m.find(x=>x[0]===S.v),fn=E(S.u.nama.split(' ')[0]);
+ const nb=x=>`<button class="ni${S.v===x[0]?' on':''}" onclick="A.go('${x[0]}')">${ic(x[2],22)}<span>${x[3]||x[1]}</span></button>`;
+ $('#root').className=IS_PREVIEW?'prev':'';
+ $('#scr').innerHTML=`${IS_PREVIEW?'<div class="pv">Mode Preview Aktif</div>':''}<div id="app"><aside class="sb"><div class="brand">${LOGO(30)}<b>KosNest <i>NTB</i></b></div><div class="sbm">${m.map(x=>`<button class="si${S.v===x[0]?' on':''}" onclick="A.go('${x[0]}')">${ic(x[2])}${x[1]}</button>`).join('')}</div><button class="si" onclick="A.out()">${ic('logout')}Keluar</button></aside>
+ <main><div class="hd"><div class="ht"><b>${S.v==='dash'?'Halo, '+fn+'!':E(cur?cur[1]:'')}</b><small>${S.v==='dash'?ROLE[S.role]:'KosNest NTB'}</small></div><button class="av" aria-label="Profil" onclick="A.go('profile')">${E(S.u.nama[0].toUpperCase())}</button></div><div id="main"></div></main>
+ <nav class="bn">${nb(nav[0])}${nb(nav[1])}<button class="fab" aria-label="Semua menu" onclick="A.menu()">${ic('plus',26)}</button>${nb(nav[2])}${nb(nav[3])}</nav></div>`}
+
+async function view(){
+ const v=S.v,el=$('#main');el.innerHTML='<div class="sk"></div><div class="sk"></div><div class="sk"></div>';
+ try{if(v==='dash')await dash();else if(v==='sub')await subv();else if(v==='profile')prof();else await crud(v)}
+ catch(e){el.innerHTML=`<div class="card warn">Gagal memuat: ${E(e.message)}</div>`}}
+
+async function dash(){
+ const r=S.role,u=S.u,L=t=>DB.list(t,wF(t));let hero,st,extra='';
+ if(r==='superadmin'){const[o,s,p]=await Promise.all([DB.list('owners',{}),DB.list('subscriptions',{}),DB.list('sub_payments',{})]);
+  const ids=new Set(o.filter(x=>x.role==='owner').map(x=>x.id));
+  const mo=today().slice(0,7),okp=p.filter(x=>x.status==='diterima'),O=idx(o);
+  hero=['Pendapatan Langganan Bulan Ini',rp(sum(okp.filter(x=>String(x.created_at).startsWith(mo)),'nominal')),'Total keseluruhan '+rp(sum(okp,'nominal'))];
+  const pn=p.filter(pend).slice(0,3),soon=s.filter(x=>ids.has(x.owner_id)&&['trial','aktif'].includes(x.status)&&x.berakhir&&x.berakhir>=today()&&x.berakhir<=addD(today(),14)).sort((a,b)=>a.berakhir>b.berakhir?1:-1).slice(0,3);
+  const nmo=id=>O[id]?(O[id].nama_usaha||O[id].nama):'-',dl=d=>Math.max(0,Math.ceil((new Date(d)-new Date(today()))/864e5));
+  const li=(t,sb,v,go)=>`<div class="mini" onclick="A.go('${go}')"><div class="rb"><b>${E(t)}</b><small>${E(sb)}</small></div><span class="bd a">${E(v)}</span></div>`;
+  extra=`<h3 class="sec">Perlu Tindakan</h3><div class="card lst2">${pn.length?pn.map(x=>li(nmo(x.owner_id),x.paket+' '+x.siklus,rp(x.nominal),'subpay')).join(''):'<p class="mt">Tidak ada pembayaran yang menunggu verifikasi.</p>'}</div><h3 class="sec">Segera Berakhir (14 hari)</h3><div class="card lst2">${soon.length?soon.map(x=>li(nmo(x.owner_id),'Berakhir '+fd(x.berakhir),dl(x.berakhir)+' hari','subs')).join(''):'<p class="mt">Tidak ada langganan yang segera berakhir.</p>'}</div>`;
+  st=[['Pemilik Kos',o.filter(x=>x.role==='owner').length,'users','owners'],['Langganan Aktif',s.filter(x=>ids.has(x.owner_id)&&x.status==='aktif').length,'card','owners'],['Menunggu Verifikasi',p.filter(pend).length,'receipt','subpay'],['Masa Trial',s.filter(x=>ids.has(x.owner_id)&&x.status==='trial').length,'bell','owners']]}
+ else if(r==='resident'){const[rm]=await DB.list('rooms',{id:u.room_id});const iv=(await DB.list('invoices',{resident_id:u.id})).filter(x=>x.status!=='lunas');
+  hero=['Kamar Anda',rm?'No. '+rm.no_kamar:'-'];
+  st=[['Tagihan Belum Lunas',iv.length,'receipt','myinv'],['Total Tunggakan',rp(sum(iv,'nominal')),'wallet','myinv'],['Pengumuman','Lihat','bell','ann'],['Keluhan','Ajukan','alert','mycomp']]}
+ else{const[rm,iv,pay,cp]=await Promise.all(['rooms','invoices','rent_payments','complaints'].map(L));const m=today().slice(0,7);
+  hero=['Pendapatan Bulan Ini',rp(sum(pay.filter(x=>x.status==='diterima'&&String(x.created_at).startsWith(m)),'nominal'))];
+  st=[['Kamar Terisi',rm.filter(x=>x.status==='terisi').length+'/'+rm.length,'bed','rooms'],['Tagihan Belum Lunas',iv.filter(x=>x.status!=='lunas').length,'receipt','invoices'],['Menunggu Verifikasi',pay.filter(pend).length,'shield','rentpay'],['Keluhan Baru',cp.filter(x=>x.status==='baru').length,'alert','complaints']]}
+ $('#main').innerHTML=`${S.lock?`<div class="card warn">Langganan berakhir, aplikasi dalam mode baca saja. ${r==='owner'?'<a onclick="A.go(\'sub\')">Perpanjang sekarang</a>':'Hubungi pemilik kos.'}</div>`:''}<div class="hero"><small>${hero[0]}</small><h1>${hero[1]}</h1>${hero[2]?`<p>${hero[2]}</p>`:''}${r==='owner'&&S.sub?`<p>Paket ${E(S.plan&&S.plan.nama||'-')} \u2022 ${S.sub.status} sampai ${fd(S.sub.berakhir)}</p>`:''}</div><div class="g2">${st.map(x=>`<div class="card stt" onclick="A.go('${x[3]}')"><span class="ico">${ic(x[2])}</span><h2>${x[1]}</h2><small>${x[0]}</small></div>`).join('')}</div>${extra}`}
+
+async function crud(id){
+ const c=C[id];if(!c)throw Error('Menu tidak ditemukan');S.c=c;S.ci=id;
+ for(const t of c.lk||[])LK[t]=idx(await DB.list(t,wF(t)));
+ S.rows=await DB.list(c.t,wF(c.t,c));
+ $('#main').innerHTML=`<div class="tt"><h2>${c.title}</h2></div><div class="sbar"><input placeholder="Cari data\u2026" oninput="A.q(this.value)">${!c.ro&&!c.noadd?`<button class="btn sq" aria-label="Tambah" onclick="A.add()">${ic('plus',22)}</button>`:''}</div>${(c.top||[]).length?`<div class="tops">${c.top.map(x=>`<button class="btn o w" onclick="A.${x[1]}()">${x[0]}</button>`).join('')}</div>`:''}<div id="lst"></div>`;
+ list()}
+function list(){
+ const c=S.c,q=(S.q||'').toLowerCase();
+ const r=S.rows.filter(x=>!q||(c.ti(x)+' '+(c.sub?c.sub(x):'')).toLowerCase().includes(q));
+ $('#lst').innerHTML=r.length?r.map(x=>{const i=S.rows.indexOf(x),b=c.bd?c.bd(x):'';
+  return `<div class="card li" onclick="A.open(${i})"><div class="rb"><b>${E(c.ti(x))}</b><small>${E(c.sub?c.sub(x):'')}</small></div>${b?`<span class="bd ${BC[b]||'b'}">${E(b)}</span>`:''}<span class="chev">${ic('chev',18)}</span></div>`}).join(''):`<div class="card em">${ic('home',32)}<p>Belum ada data. ${!c.ro&&!c.noadd?'Tekan Tambah untuk mulai.':''}</p></div>`}
+
+async function fld(f,v,ed){
+ const[k,l,t,o]=f,req=!/opsional/i.test(l)&&!(t==='password'&&ed);v=v==null?'':v;let h=`<label>${l}</label>`;
+ if(t==='select'){let op=o;if(o&&o.t){const rs=await DB.list(o.t,wF(o.t));LK[o.t]=idx(rs);op=rs.map(x=>[x.id,o.l(x)])}
+  h+=`<select name="${k}" ${req?'required':''}><option value="">-- pilih --</option>${op.map(x=>{x=Array.isArray(x)?x:[x,x];return `<option value="${E(x[0])}"${x[0]==v?' selected':''}>${E(x[1])}</option>`}).join('')}</select>`}
+ else if(t==='textarea')h+=`<textarea name="${k}" rows="3" ${req?'required':''}>${E(v)}</textarea>`;
+ else h+=`<input name="${k}" type="${t}" value="${t==='password'?'':E(v)}" ${req?'required':''} ${t==='password'&&ed?'placeholder="Kosongkan jika tidak diubah"':''}>`;
+ return h}
+async function frm(){
+ const c=S.c,r=S.ed,fs=[];for(const f of c.f)fs.push(await fld(f,r?r[f[0]]:'',!!r));
+ modal(`<h2>${r?'Ubah':'Tambah'} ${c.title}</h2><form onsubmit="A.save(event)">${fs.join('')}<div class="fr"><button class="btn w">Simpan</button>${r&&!(c.nodel&&c.nodel(r))?'<button type="button" class="btn d w" onclick="A.rm()">Hapus</button>':''}</div></form>`)}
+
+async function subv(){
+ const[pl,ps]=await Promise.all([DB.list('plans',{}),DB.list('sub_payments',{owner_id:S.u.id})]);await loadSub();
+ const s=S.sub,days=s?Math.ceil((new Date(s.berakhir)-new Date(today()))/864e5):0;
+ S.pls=pl.sort((a,b)=>a.harga_bulanan-b.harga_bulanan);
+ $('#main').innerHTML=`<h2 style="margin:8px 0 12px">Langganan</h2><div class="hero"><small>Paket saat ini</small><h1>${E(S.plan&&S.plan.nama||'-')}</h1><p>${s?`${s.status} \u2022 sampai ${fd(s.berakhir)} (${Math.max(days,0)} hari lagi)`:'Belum berlangganan'}</p></div>
+ <div class="tg"><button id="tb" onclick="A.cy('bulanan')">Bulanan</button><button id="ty" onclick="A.cy('tahunan')">Tahunan (hemat 2 bulan)</button></div><div id="pc" style="display:grid;gap:12px"></div>
+ <h3 style="margin:18px 0 10px">Riwayat Pembayaran</h3><div id="lst">${ps.map(x=>`<div class="card row"><div class="rb"><b>${E(x.paket)} \u2022 ${x.siklus}</b><small>${rp(x.nominal)} \u2022 ${fd(x.created_at)}</small></div><span class="bd ${BC[x.status]||'b'}">${x.status}</span></div>`).join('')||'<div class="card em">Belum ada pembayaran</div>'}</div>`;
+ A.cy('bulanan')}
+function prof(){
+ const u=S.u;$('#main').innerHTML=`<div class="card" style="text-align:center;margin-bottom:12px"><div class="av big">${E(u.nama[0])}</div><h2>${E(u.nama)}</h2><small>${ROLE[S.role]}</small></div><div class="card" style="margin-bottom:12px">${[['Email',u.email],['Username',u.username],['WhatsApp',u.no_wa],['Usaha',u.nama_usaha]].filter(x=>x[1]).map(x=>`<div class="kv"><span>${x[0]}</span><b>${E(x[1])}</b></div>`).join('')}</div><button class="btn d w" onclick="A.out()">${ic('logout',16)} Keluar</button>`}
+
+async function loadSub(){
+ S.sub=S.plan=null;S.lock=false;if(S.role==='superadmin')return;
+ const[s]=await DB.list('subscriptions',{owner_id:oid()});S.sub=s||null;
+ if(s){[S.plan]=await DB.list('plans',{id:s.plan_id})}
+ S.lock=S.role!=='resident'&&(!s||!['trial','aktif'].includes(s.status)||s.berakhir<today())}
+async function enter(role,u){
+ if(role==='staff'||role==='resident'){const[ow]=await DB.list('owners',{id:u.owner_id});if(ow&&ow.status==='ditangguhkan'){try{localStorage.removeItem('kn')}catch(x){}throw Error('Akun kos ini ditangguhkan. Hubungi pemilik kos.')}}S.role=role;S.u=u;S.v='dash';await loadSub();shell();view()}
+async function enterOwner(id){let[o]=await DB.list('owners',{id});if(!o&&!IS_PREVIEW){await sb.rpc('ensure_owner');[o]=await DB.list('owners',{id})}if(!o)throw Error('Akun ini belum terdaftar sebagai pemilik kos.');if(o.role==='owner'&&o.status==='ditangguhkan'){if(!IS_PREVIEW)await sb.auth.signOut();throw Error('Akun ditangguhkan. Hubungi admin KosNest.')}await enter(o.role,o)}
+
+// AKSI (dipanggil dari HTML)
+const A=window.A={
+cl(){$('#mo').innerHTML=''},
+go(v){S.v=v;S.q='';shell();view()},
+menu(){modal(`<h2>Semua Menu</h2><div class="gm">${MENU[S.role].map(x=>`<button onclick="A.cl();A.go('${x[0]}')"><span>${ic(x[2],22)}</span>${x[1]}</button>`).join('')}</div>`)},
+tab(t){S.tab=t;S.reg=0;login()},rg(v){S.reg=v;login()},
+q(v){S.q=v;list()},
+async login(e){e.preventDefault();const f=e.target,t=S.tab;
+ try{if(IS_PREVIEW)return toast('Mode preview: gunakan tombol Quick Login.');
+  if(t==='owner'){const{data,error}=await sb.auth.signInWithPassword({email:f.u.value.trim(),password:f.p.value});if(error)throw error;try{localStorage.removeItem('kn')}catch(x){}await enterOwner(data.user.id)}
+  else{const{data,error}=await sb.rpc('login_user',{p_role:t,p_username:f.u.value.trim(),p_password:f.p.value});if(error)throw error;if(!data)throw Error('Username atau password salah.');try{localStorage.setItem('kn',JSON.stringify({role:t,u:data}))}catch(x){}await enter(t,data)}
+ }catch(x){toast(x.message,1)}},
+async reg(e){e.preventDefault();const f=e.target;
+ try{if(IS_PREVIEW)return toast('Pendaftaran dinonaktifkan di mode preview.');
+  const em=f.e.value.trim(),pw=f.p.value;
+  const{data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{nama:f.n.value.trim(),nama_usaha:f.k.value.trim(),no_wa:f.w.value.trim()}}});if(error)throw error;
+  if(!data.user||(data.user.identities&&!data.user.identities.length))throw Error('Email sudah terdaftar. Silakan masuk.');
+  let ses=data.session;
+  if(!ses){const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error)throw Error('Pendaftaran berhasil. Cek email untuk konfirmasi, lalu masuk.');ses=r.data.session}
+  toast('Selamat datang! Trial 14 hari dimulai.');await enterOwner(ses.user.id)
+ }catch(x){toast(x.message,1)}},
+async ql(r){if(!IS_PREVIEW)return;try{if(r==='superadmin'||r==='owner')await enterOwner(r==='owner'?'o1':'su');else await enter(r,r==='staff'?SEED.staff[0]:SEED.residents[0])}catch(x){toast(x.message,1)}},
+async out(){if(!IS_PREVIEW){try{await sb.auth.signOut()}catch(x){}try{localStorage.removeItem('kn')}catch(x){}}S.u=null;S.tab='owner';S.reg=0;login()},
+async add(){if(S.lock)return toast(LOCKMSG,1);const c=S.c;if(c.lim&&S.plan&&S.rows.length>=S.plan[c.lim])return toast('Batas paket tercapai. Upgrade di menu Langganan.',1);S.ed=null;await frm()},
+async edit(i){const c=S.c;if(c.ro||!c.f.length)return;if(S.lock)return toast(LOCKMSG,1);S.ed=S.rows[i];await frm()},
+async save(e){e.preventDefault();const c=S.c,r=S.ed,o={};
+ try{for(const f of c.f){let v=e.target[f[0]].value.trim();if(f[2]==='number')v=v===''?null:Number(v);else if(v==='')v=null;if(f[2]==='password'&&v===null)continue;o[f[0]]=v}
+  if(!r&&c.own)o.owner_id=oid();if(c.pre)c.pre(o);
+  if(r)await DB.upd(c.t,r.id,o);else await DB.add(c.t,o);
+  if(c.after)await c.after({...r,...o});
+  log((r?'Mengubah ':'Menambah ')+c.title);A.cl();toast('Tersimpan');await crud(S.ci)}catch(x){toast(x.message,1)}},
+async rm(){if(S.c.nodel&&S.c.nodel(S.ed))return toast('Akun Super Admin tidak dapat dihapus.',1);if(!confirm('Hapus data ini?'+(S.c.t==='owners'?' Seluruh data kos milik pemilik ini ikut terhapus.':'')))return;try{if(S.c.t==='owners'&&!IS_PREVIEW){const{error}=await sb.rpc('admin_delete_owner',{p_id:S.ed.id});if(error)throw error}else await DB.del(S.c.t,S.ed.id);log('Menghapus '+S.c.title);A.cl();toast('Terhapus');await crud(S.ci)}catch(x){toast(x.message,1)}},
+open(i){const c=S.c,r=S.rows[i],b=c.bd?c.bd(r):'',acts=(c.act||[]).filter(a=>!a[2]||a[2](r)),can=!c.ro&&c.f.length;
+ if(!acts.length&&can)return A.edit(i);
+ modal(`<h2>${E(c.ti(r))}</h2>${b?`<span class="bd ${BC[b]||'b'}">${E(b)}</span>`:''}<p class="dt">${E(c.sub?c.sub(r):'')}</p><div class="al">${acts.map(a=>`<button class="ai${/Tangguhkan|Tolak|Nonaktifkan/.test(a[0])?' rd':''}" onclick="A.cl();A.act(${i},'${a[0]}')">${a[0]}</button>`).join('')}${can?`<button class="ai" onclick="A.cl();A.edit(${i})">Ubah Data</button>`:''}</div>`)},
+async act(i,l){const c=S.c,r=S.rows[i],a=c.act.find(x=>x[0]===l);if(S.lock&&!['Bukti','WA'].includes(l))return toast(LOCKMSG,1);
+ try{await a[1](r);await crud(S.ci)}catch(x){toast(x.message,1)}},
+async genInv(){if(S.lock)return toast(LOCKMSG,1);
+ try{const rs=(await DB.list('residents',wF('residents'))).filter(x=>x.status==='aktif'&&x.room_id);
+  const[rm,pr,iv]=await Promise.all([DB.list('rooms',wF('rooms')),DB.list('properties',wF('properties')),DB.list('invoices',wF('invoices'))]);
+  const R=idx(rm),P=idx(pr),pe=today().slice(0,7);let n=0;
+  for(const x of rs){if(iv.some(v=>v.resident_id===x.id&&v.periode===pe))continue;
+   const d=String(P[x.property_id]&&P[x.property_id].tgl_jatuh_tempo||5).padStart(2,'0');
+   await DB.add('invoices',{owner_id:oid(),property_id:x.property_id,resident_id:x.id,periode:pe,nominal:R[x.room_id]?R[x.room_id].harga_bulanan:0,jatuh_tempo:`${pe}-${d}`,status:'belum'});n++}
+  log('Membuat '+n+' tagihan '+pe);toast(n+' tagihan baru dibuat');await crud('invoices')}catch(x){toast(x.message,1)}},
+async pay(e,id){e.preventDefault();const f=e.target,m=f.m.value,file=f.f.files[0],btn=f.querySelector('.btn');
+ if(!m.startsWith('Tunai')&&!file)return toast('Unggah foto bukti pembayaran.',1);
+ btn.disabled=true;btn.textContent='Mengirim\u2026';
+ try{const[iv]=await DB.list('invoices',{id});const url=await up(file);
+  await DB.add('rent_payments',{owner_id:iv.owner_id,property_id:iv.property_id,invoice_id:id,resident_id:S.u.id,nominal:iv.nominal,metode:m,bukti_url:url,status:'menunggu'});
+  await DB.upd('invoices',id,{status:'menunggu'});A.cl();
+  toast(m.startsWith('Tunai')?'Pengajuan tunai terkirim. Serahkan uang ke penjaga untuk diverifikasi.':'Bukti terkirim, menunggu verifikasi.');await crud('myinv')}
+ catch(x){btn.disabled=false;btn.textContent='Kirim Bukti';toast(x.message,1)}},
+cy(c){S.cy=c;$('#tb').className=c==='bulanan'?'on':'';$('#ty').className=c==='tahunan'?'on':'';
+ $('#pc').innerHTML=S.pls.map(p=>`<div class="card row"><div class="rb"><b>${E(p.nama)}</b><small>${p.maks_kos>=9999?'Tanpa batas':p.maks_kos+' kos, '+p.maks_kamar+' kamar, '+p.maks_penjaga+' penjaga'}</small></div><div style="text-align:right"><b>${rp(c==='tahunan'?p.harga_tahunan:p.harga_bulanan)}</b><br><button class="btn s" onclick="A.chs('${p.id}')">Pilih</button></div></div>`).join('')},
+async chs(id){const p=S.pls.find(x=>x.id===id),n=S.cy==='tahunan'?p.harga_tahunan:p.harga_bulanan,[st]=await DB.list('settings',{});S.pick={p,n};
+ modal(`<h2>Bayar Paket ${E(p.nama)} (${S.cy})</h2><div class="card">Total <b>${rp(n)}</b><pre>${E(st&&st.rekening||'Hubungi admin untuk info rekening.')}</pre></div><form onsubmit="A.sp(event)"><label>Metode</label><select name="m"><option>Transfer Bank</option><option>DANA</option><option>OVO</option><option>QRIS</option></select><label>Bukti transfer (foto)</label><input type="file" name="f" accept="image/*" required><button class="btn w">Kirim Bukti Pembayaran</button></form>`)},
+async sp(e){e.preventDefault();const f=e.target,m=f.m.value,file=f.f.files[0],btn=f.querySelector('.btn'),{p,n}=S.pick;
+ if(!file)return toast('Unggah foto bukti transfer.',1);
+ btn.disabled=true;btn.textContent='Mengirim\u2026';
+ try{const url=await up(file);
+  await DB.add('sub_payments',{owner_id:S.u.id,subscription_id:S.sub?S.sub.id:null,plan_id:p.id,paket:p.nama,siklus:S.cy,nominal:n,metode:m,bukti_url:url,status:'menunggu'});
+  A.cl();toast('Terkirim. Menunggu verifikasi admin.');await subv()}
+ catch(x){btn.disabled=false;btn.textContent='Kirim Bukti Pembayaran';toast(x.message,1)}}
+};
+
+// INISIALISASI
+(async()=>{
+ const t0=Date.now();let pre=null;
+ if(!IS_PREVIEW){try{const{data}=await sb.auth.getSession();
+  if(data.session){const uid=data.session.user.id;pre=()=>enterOwner(uid)}
+  else{const s=JSON.parse(localStorage.getItem('kn')||'null');if(s)pre=()=>enter(s.role,s.u)}}catch(e){}}
+ await new Promise(r=>setTimeout(r,Math.max(0,2300-(Date.now()-t0))));
+ $('#ld').classList.add('out');setTimeout(()=>$('#ld').remove(),700);
+ try{pre?await pre():login()}catch(e){login();toast(e.message,1)}
+})();
+</script></body></html>
